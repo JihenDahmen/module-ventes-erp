@@ -37,6 +37,6 @@ endpoints.forEach(endpoint => {
         });
 
     }).on('error', (err) => {
-        console.error(`Error requesting ${endpoint}:`, err.message);
+        console.error(`Error requesting ${endpoint}:`, err);
     });
 });

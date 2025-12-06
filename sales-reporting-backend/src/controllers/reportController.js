@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.getTotalRevenue = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT SUM(montant) as totalRevenue FROM ventes');
+        const [rows] = await db.query('SELECT SUM(total) as totalRevenue FROM orders');
         res.json({ totalRevenue: rows[0].totalRevenue || 0 });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -11,7 +11,16 @@ exports.getTotalRevenue = async (req, res) => {
 
 exports.getSalesByProduct = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT produit_id as produit, COUNT(*) as count, SUM(montant) as revenue FROM ventes GROUP BY produit_id');
+        const [rows] = await db.query(`
+            SELECT 
+                p.name as produit, 
+                COUNT(DISTINCT o.id) as count, 
+                SUM(oi.quantity * oi.unit_price) as revenue 
+            FROM orders o 
+            JOIN order_items oi ON o.id = oi.order_id 
+            JOIN products p ON oi.product_id = p.id
+            GROUP BY p.id, p.name
+        `);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -20,7 +29,15 @@ exports.getSalesByProduct = async (req, res) => {
 
 exports.getSalesByClient = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT client_id as client, COUNT(*) as count, SUM(montant) as revenue FROM ventes GROUP BY client_id');
+        const [rows] = await db.query(`
+            SELECT 
+                c.name as client, 
+                COUNT(o.id) as count, 
+                SUM(o.total) as revenue 
+            FROM orders o 
+            JOIN clients c ON o.client_id = c.id 
+            GROUP BY c.id, c.name
+        `);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -29,7 +46,15 @@ exports.getSalesByClient = async (req, res) => {
 
 exports.getSalesByRegion = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT region, COUNT(*) as count, SUM(montant) as revenue FROM ventes GROUP BY region');
+        const [rows] = await db.query(`
+            SELECT 
+                c.region, 
+                COUNT(o.id) as count, 
+                SUM(o.total) as revenue 
+            FROM orders o 
+            JOIN clients c ON o.client_id = c.id 
+            GROUP BY c.region
+        `);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -38,8 +63,8 @@ exports.getSalesByRegion = async (req, res) => {
 
 exports.getConversionRate = async (req, res) => {
     try {
-        const [devisRows] = await db.query('SELECT COUNT(*) as totalDevis FROM devis');
-        const [commandesRows] = await db.query('SELECT COUNT(*) as totalCommandes FROM commandes');
+        const [devisRows] = await db.query('SELECT COUNT(*) as totalDevis FROM quotes');
+        const [commandesRows] = await db.query('SELECT COUNT(*) as totalCommandes FROM orders');
 
         const totalDevis = devisRows[0].totalDevis || 0;
         const totalCommandes = commandesRows[0].totalCommandes || 0;
@@ -58,7 +83,7 @@ exports.getConversionRate = async (req, res) => {
 
 exports.getPendingPayments = async (req, res) => {
     try {
-        const [rows] = await db.query("SELECT * FROM ventes WHERE statut LIKE '%attente%' OR statut LIKE '%pending%'");
+        const [rows] = await db.query("SELECT * FROM orders WHERE pay_status LIKE '%pending%' OR pay_status LIKE '%unpaid%'");
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -67,9 +92,15 @@ exports.getPendingPayments = async (req, res) => {
 
 exports.getMargins = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT SUM(montant) as totalRevenue, SUM(cout_achat) as totalCost FROM ventes');
-        const revenue = rows[0].totalRevenue || 0;
-        const cost = rows[0].totalCost || 0;
+        const [revenueRows] = await db.query('SELECT SUM(total) as totalRevenue FROM orders');
+        const [costRows] = await db.query(`
+            SELECT SUM(oi.quantity * p.cost_price) as totalCost 
+            FROM order_items oi 
+            JOIN products p ON oi.product_id = p.id
+        `);
+
+        const revenue = revenueRows[0].totalRevenue || 0;
+        const cost = costRows[0].totalCost || 0;
         const margin = revenue - cost;
         const marginRate = revenue > 0 ? (margin / revenue) * 100 : 0;
 
@@ -86,13 +117,13 @@ exports.getMargins = async (req, res) => {
 
 exports.getReturns = async (req, res) => {
     try {
-        const [rows] = await db.query("SELECT * FROM ventes WHERE statut = 'retourné'");
-        const count = rows.length;
+        const [rows] = await db.query("SELECT * FROM orders WHERE status = 'returned'");
+
         let totalValue = 0;
-        rows.forEach(r => totalValue += parseFloat(r.montant));
+        rows.forEach(r => totalValue += parseFloat(r.total));
 
         res.json({
-            returnedItemsCount: count,
+            returnedItemsCount: rows.length,
             totalReturnedValue: totalValue,
             details: rows
         });

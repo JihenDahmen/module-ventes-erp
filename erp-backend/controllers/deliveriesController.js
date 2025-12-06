@@ -25,6 +25,15 @@ export const getDeliveryById = (req, res) => {
     });
 };
 
+// List all deliveries
+export const getAllDeliveries = (req, res) => {
+    const sql = "SELECT * FROM deliveries ORDER BY created_at DESC";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(results);
+    });
+};
+
 // Update status
 export const updateDeliveryStatus = (req, res) => {
     const { status } = req.body;

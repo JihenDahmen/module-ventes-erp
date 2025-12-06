@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const quotesRoutes = require('./routes/quotes.routes');
@@ -9,4 +10,5 @@ app.use(express.json());
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/orders', ordersRoutes);
 
-app.listen(5000, () => console.log("ERP backend running on port 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`ERP backend running on port ${PORT}`));
