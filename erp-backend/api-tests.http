@@ -1,0 +1,22 @@
+### Create delivery
+POST http://localhost:3000/deliveries
+Content-Type: application/json
+
+{
+  "order_id": 1,
+  "client_id": 10
+}
+
+### Get delivery by ID
+GET http://localhost:3000/deliveries/1
+
+### Update delivery status
+PATCH http://localhost:3000/deliveries/1/status
+Content-Type: application/json
+
+{
+  "status": "shipped"
+}
+
+### Create delivery
+POST http://localhost:3000/deliveries   ← this line gets a "Send Request" button
