@@ -8,5 +8,7 @@ router.get('/sales-by-client', reportController.getSalesByClient);
 router.get('/sales-by-region', reportController.getSalesByRegion);
 router.get('/conversion-rate', reportController.getConversionRate);
 router.get('/pending-payments', reportController.getPendingPayments);
+router.get('/margins', reportController.getMargins);
+router.get('/returns', reportController.getReturns);
 
 module.exports = router;

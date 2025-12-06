@@ -6,7 +6,9 @@ const endpoints = [
     '/api/report/sales-by-client',
     '/api/report/sales-by-region',
     '/api/report/conversion-rate',
-    '/api/report/pending-payments'
+    '/api/report/pending-payments',
+    '/api/report/margins',
+    '/api/report/returns'
 ];
 
 console.log('--- Démarrage des tests API ---\n');

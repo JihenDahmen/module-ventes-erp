@@ -38,15 +38,18 @@ exports.getSalesByRegion = async (req, res) => {
 
 exports.getConversionRate = async (req, res) => {
     try {
-        // Tables 'devis' and 'commandes' do not exist in the current schema.
-        // Returning 0 values to prevent crash.
-        // Ideally, this should query 'devis' and 'commandes' tables if they existed.
+        const [devisRows] = await db.query('SELECT COUNT(*) as totalDevis FROM devis');
+        const [commandesRows] = await db.query('SELECT COUNT(*) as totalCommandes FROM commandes');
+
+        const totalDevis = devisRows[0].totalDevis || 0;
+        const totalCommandes = commandesRows[0].totalCommandes || 0;
+
+        const rate = totalDevis > 0 ? (totalCommandes / totalDevis) * 100 : 0;
 
         res.json({
-            totalDevis: 0,
-            totalCommandes: 0,
-            conversionRate: 0,
-            note: "Tables 'devis' and 'commandes' not found. conversion rate cannot be calculated."
+            totalDevis,
+            totalCommandes,
+            conversionRate: rate.toFixed(2) + '%'
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -55,9 +58,44 @@ exports.getConversionRate = async (req, res) => {
 
 exports.getPendingPayments = async (req, res) => {
     try {
-        // Assuming 'statut' column holds payment status info, checking for 'attente'
         const [rows] = await db.query("SELECT * FROM ventes WHERE statut LIKE '%attente%' OR statut LIKE '%pending%'");
         res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getMargins = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT SUM(montant) as totalRevenue, SUM(cout_achat) as totalCost FROM ventes');
+        const revenue = rows[0].totalRevenue || 0;
+        const cost = rows[0].totalCost || 0;
+        const margin = revenue - cost;
+        const marginRate = revenue > 0 ? (margin / revenue) * 100 : 0;
+
+        res.json({
+            totalRevenue: revenue,
+            totalCost: cost,
+            netMargin: margin,
+            marginRate: marginRate.toFixed(2) + '%'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getReturns = async (req, res) => {
+    try {
+        const [rows] = await db.query("SELECT * FROM ventes WHERE statut = 'retourné'");
+        const count = rows.length;
+        let totalValue = 0;
+        rows.forEach(r => totalValue += parseFloat(r.montant));
+
+        res.json({
+            returnedItemsCount: count,
+            totalReturnedValue: totalValue,
+            details: rows
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
