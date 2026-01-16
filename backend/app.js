@@ -1,5 +1,7 @@
+// Force restart - DB Link update
 const express = require('express');
 const cors = require('cors');
+// Force restart - DB Link update
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +23,7 @@ app.use('/api/produits', require('./routes/produits'));
 app.use('/api/retours', require('./routes/retours'));
 app.use('/api/avoirs', require('./routes/avoirs'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/report', require('./routes/report'));
 
 app.get('/api', (req, res) => {
   res.json({

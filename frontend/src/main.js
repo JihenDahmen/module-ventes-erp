@@ -1,17 +1,21 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import router from './router';
-import store from './store';
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import router from './router'
 
-// IMPORTANT : Bootstrap doit être importé dans cet ordre
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';  // AJOUTER CETTE LIGNE
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import './assets/css/main.css';
+// Bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import 'bootstrap-icons/font/bootstrap-icons.css'
 
-const app = createApp(App);
+// Global styles
+import './style.css'
 
-app.use(store);
-app.use(router);
+console.log('Starting App...');
+const app = createApp(App)
 
-app.mount('#app');
+app.use(createPinia())
+app.use(router)
+
+app.mount('#app')
+console.log('App Mounted');
