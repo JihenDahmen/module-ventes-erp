@@ -1,0 +1,26 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend ERP module ventes - Gestion des paiements et retours",
+  "main": "app.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:sales\" \"npm run start:core\" \"npm run start:erp\" --kill-others --prefix-colors auto",
+    "start:sales": "node app.js",
+    "start:core": "cd core && node server.js",
+    "start:erp": "cd erp && node server.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mysql2": "^3.16.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11"
+  }
+}
